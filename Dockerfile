@@ -6,4 +6,6 @@ WORKDIR /app
 
 COPY . /app
 
+COPY Caddyfile /etc/frankenphp/Caddyfile
+
 RUN php -m | grep -E "mysqli|pdo_mysql"
