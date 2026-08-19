@@ -1,20 +1,27 @@
 <?php
 
-// Database Configuration
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "library_db";
+// Railway MySQL configuration
+$host = getenv('MYSQLHOST') ?: 'localhost';
+$port = getenv('MYSQLPORT') ?: '3306';
+$username = getenv('MYSQLUSER') ?: 'root';
+$password = getenv('MYSQLPASSWORD') ?: 'jbLTqJDjPIeGCryzVEaalcNTeCMEBMUL';
+$database = getenv('MYSQLDATABASE') ?: 'library_db';
 
 // Create connection
-$mysqli = new mysqli($host, $username, $password, $database);
+$mysqli = new mysqli(
+    $host,
+    $username,
+    $password,
+    $database,
+    $port
+);
 
 // Check connection
-if ($mysqli->connect_errno) {
+if ($mysqli->connect_error) {
     die("Database Connection Failed: " . $mysqli->connect_error);
 }
 
-// Set charset (important for production)
+// Set charset
 $mysqli->set_charset("utf8mb4");
 
 ?>
