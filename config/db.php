@@ -1,22 +1,22 @@
 <?php
 
-$host = getenv('MYSQLHOST') ?: 'localhost';
-$port = getenv('MYSQLPORT') ?: 3306;
-$username = getenv('MYSQLUSER') ?: 'root';
-$password = getenv('MYSQLPASSWORD') ?: '';
-$database = getenv('MYSQLDATABASE') ?: 'library_db';
+$host = getenv('MYSQLHOST');
+$user = getenv('MYSQLUSER');
+$password = getenv('MYSQLPASSWORD');
+$database = getenv('MYSQLDATABASE');
+$port = getenv('MYSQLPORT');
 
-$mysqli = new mysqli(
+$conn = new mysqli(
     $host,
-    $username,
+    $user,
     $password,
     $database,
-    $port
+    (int)$port
 );
 
-if ($mysqli->connect_error) {
-    die("Database Connection Failed: " . $mysqli->connect_error);
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
 }
 
-$mysqli->set_charset("utf8mb4");
+$conn->set_charset("utf8mb4");
 ?>
