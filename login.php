@@ -1,39 +1,43 @@
 <?php
-session_start();
+require_once "includes/security.php";
+library_system_bootstrap();
 require_once "config/db.php";
 
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    require_csrf_token();
 
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
-    $role = trim($_POST['role']);
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $role = trim($_POST['role'] ?? 'user');
 
-    $stmt = $mysqli->prepare("SELECT * FROM users WHERE email = ? AND role = ? LIMIT 1");
-    $stmt->bind_param("ss", $email, $role);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '' || !in_array($role, ['user', 'admin'], true)) {
+        $error = "Invalid Email or Password";
+    } else {
+        $stmt = $mysqli->prepare("SELECT * FROM users WHERE email = ? AND role = ? LIMIT 1");
+        $stmt->bind_param("ss", $email, $role);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    if($result->num_rows === 1){
-        $user = $result->fetch_assoc();
+        if($result->num_rows === 1){
+            $user = $result->fetch_assoc();
 
-        if(password_verify($password, $user['password'])){
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['name'] = $user['name'];
-            $_SESSION['role'] = $user['role'];
+            if(password_verify($password, $user['password'])){
+                set_logged_in_user($user);
 
-            if($user['role'] === "admin"){
-                header("Location: admin/dashboard.php");
+                if($user['role'] === "admin"){
+                    header("Location: admin/dashboard.php");
+                } else {
+                    header("Location: user/dashboard.php");
+                }
+                exit;
             } else {
-                header("Location: user/dashboard.php");
+                $error = "Invalid Email or Password";
             }
-            exit;
         } else {
             $error = "Invalid Email or Password";
         }
-    } else {
-        $error = "Invalid Email or Password";
     }
 }
 ?>
@@ -240,6 +244,7 @@ text-decoration:none;
 </div>
 
 <form method="POST">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <input type="hidden" name="role" id="role" value="user">
     <input type="email" name="email" placeholder="Enter Email" required>
     <input type="password" name="password" placeholder="Enter Password" required>

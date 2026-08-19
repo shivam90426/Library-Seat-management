@@ -1,10 +1,10 @@
 <?php
-session_start();
+require_once "../../includes/security.php";
+library_system_bootstrap();
 require_once "../../config/db.php";
 
-if(!isset($_SESSION['user_id'])){
-    exit;
-}
+header("Content-Type: application/json");
+require_api_login('user');
 
 $user_id = intval($_SESSION['user_id']);
 $today = date("Y-m-d");
@@ -12,7 +12,7 @@ $today = date("Y-m-d");
 /*
 Get all seats + check booking status
 */
-$query = "
+$stmt = $mysqli->prepare("
 SELECT 
     s.id,
     s.seat_no,
@@ -20,27 +20,24 @@ SELECT
     s.section_name,
     s.is_active,
     s.is_maintenance,
-
     sb.user_id AS booked_user,
     sb.booking_type,
     sb.booking_date,
     sb.status
-
 FROM seats s
-
 LEFT JOIN seat_bookings sb 
     ON sb.seat_id = s.id
     AND sb.status = 'active'
     AND (
-        (sb.booking_type='daily' AND sb.booking_date='$today')
+        (sb.booking_type='daily' AND sb.booking_date=?)
         OR
         (sb.booking_type='fixed')
     )
-
 ORDER BY s.seat_type, s.position_order
-";
-
-$result = $mysqli->query($query);
+");
+$stmt->bind_param("s", $today);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $seats = [];
 

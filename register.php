@@ -1,54 +1,80 @@
 <?php
-session_start();
+require_once "includes/security.php";
+library_system_bootstrap();
 require_once "config/db.php";
 
 $success="";
 $error="";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    require_csrf_token();
 
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
 
-    // Check duplicate email
-    $check = $mysqli->prepare("SELECT id FROM users WHERE email=? LIMIT 1");
-    $check->bind_param("s",$email);
-    $check->execute();
-    $check->store_result();
-
-    if($check->num_rows>0){
-        $error="Email already registered";
+    if ($name === '' || strlen($name) > 100) {
+        $error = "Please enter a valid name";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Please enter a valid email address";
+    } elseif (strlen($password) < 8) {
+        $error = "Password must be at least 8 characters long";
     } else {
+        // Check duplicate email
+        $check = $mysqli->prepare("SELECT id FROM users WHERE email=? LIMIT 1");
+        $check->bind_param("s",$email);
+        $check->execute();
+        $check->store_result();
 
-        $hashed = password_hash($password,PASSWORD_DEFAULT);
-        $role="user";
-        $profile_pic = NULL;
-
-        // Image Upload
-        if(!empty($_FILES['profile_pic']['name'])){
-            $target_dir="assets/images/profile/";
-            if(!is_dir($target_dir)){
-                mkdir($target_dir,0777,true);
-            }
-
-            $file_name=time()."_".basename($_FILES['profile_pic']['name']);
-            $target_file=$target_dir.$file_name;
-
-            $allowed_types=['image/jpeg','image/png','image/jpg'];
-            if(in_array($_FILES['profile_pic']['type'],$allowed_types)){
-                move_uploaded_file($_FILES['profile_pic']['tmp_name'],$target_file);
-                $profile_pic=$target_file;
-            }
-        }
-
-        $stmt=$mysqli->prepare("INSERT INTO users (name,email,password,role,profile_pic,created_at) VALUES (?,?,?,?,?,NOW())");
-        $stmt->bind_param("sssss",$name,$email,$hashed,$role,$profile_pic);
-
-        if($stmt->execute()){
-            $success="Registration Successful! Redirecting...";
+        if($check->num_rows>0){
+            $error="Email already registered";
         } else {
-            $error="Something went wrong!";
+
+            $hashed = password_hash($password,PASSWORD_DEFAULT);
+            $role="user";
+            $profile_pic = NULL;
+
+            // Image upload
+            if(!empty($_FILES['profile_pic']['name']) && is_uploaded_file($_FILES['profile_pic']['tmp_name'])){
+                $target_dir="assets/images/profile/";
+                if(!is_dir($target_dir)){
+                    mkdir($target_dir,0755,true);
+                }
+
+                if ($_FILES['profile_pic']['size'] > 2 * 1024 * 1024) {
+                    $error = "Profile picture must be under 2 MB";
+                } else {
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->file($_FILES['profile_pic']['tmp_name']);
+                    $allowedTypes = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png'
+                    ];
+
+                    if (!isset($allowedTypes[$mimeType])) {
+                        $error = "Only JPG and PNG images are allowed";
+                    } else {
+                        $file_name = bin2hex(random_bytes(16)) . "." . $allowedTypes[$mimeType];
+                        $target_file = $target_dir . $file_name;
+                        if (!move_uploaded_file($_FILES['profile_pic']['tmp_name'], $target_file)) {
+                            $error = "Unable to upload profile picture";
+                        } else {
+                            $profile_pic = $target_file;
+                        }
+                    }
+                }
+            }
+
+            if ($error === "") {
+                $stmt=$mysqli->prepare("INSERT INTO users (name,email,password,role,profile_pic,created_at) VALUES (?,?,?,?,?,NOW())");
+                $stmt->bind_param("sssss",$name,$email,$hashed,$role,$profile_pic);
+
+                if($stmt->execute()){
+                    $success="Registration Successful! Redirecting...";
+                } else {
+                    $error="Something went wrong!";
+                }
+            }
         }
     }
 }
@@ -260,6 +286,7 @@ setTimeout(()=>{ window.location="login.php"; },2000);
 <?php } ?>
 
 <form method="POST" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
 
 <div class="preview" id="imagePreview">
     <span style="color:#64748b;">Preview</span>

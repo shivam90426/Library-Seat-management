@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once "../../includes/security.php";
+library_system_bootstrap();
+require_request_method('POST');
+require_csrf_token();
 require_once "../../config/db.php";
 
-if(!isset($_SESSION['user_id'])){
+if(empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'user'){
     echo json_encode(["status"=>"error"]);
     exit;
 }
@@ -40,31 +43,12 @@ WHERE id=?
 $update->bind_param("i",$attendance_id);
 $update->execute();
 
-/* insert/update timings */
-$date = date("Y-m-d");
-
-$check = $mysqli->prepare("
-SELECT id,total_minutes FROM timings
-WHERE user_id=? AND date=?
+/* store timing in the same schema used by the dashboard analytics */
+$timing = $mysqli->prepare("
+INSERT INTO timings (user_id, entry_time, exit_time, duration_minutes)
+VALUES (?, ?, NOW(), ?)
 ");
-$check->bind_param("is",$user_id,$date);
-$check->execute();
-$existing = $check->get_result()->fetch_assoc();
-
-if($existing){
-    $newMinutes = $existing['total_minutes'] + $minutes;
-    $up = $mysqli->prepare("
-    UPDATE timings SET total_minutes=? WHERE id=?
-    ");
-    $up->bind_param("ii",$newMinutes,$existing['id']);
-    $up->execute();
-}else{
-    $ins = $mysqli->prepare("
-    INSERT INTO timings (user_id,date,total_minutes)
-    VALUES (?,?,?)
-    ");
-    $ins->bind_param("isi",$user_id,$date,$minutes);
-    $ins->execute();
-}
+$timing->bind_param("isi", $user_id, $entry_time, $minutes);
+$timing->execute();
 
 echo json_encode(["status"=>"success"]);

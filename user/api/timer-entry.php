@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once "../../includes/security.php";
+library_system_bootstrap();
+require_request_method('POST');
+require_csrf_token();
 require_once "../../config/db.php";
 
-if(!isset($_SESSION['user_id'])){
+if(empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'user'){
     exit;
 }
 

@@ -7,295 +7,329 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-/* ===== Dashboard Stats ===== */
-
-$totalUsers = $mysqli->query("SELECT COUNT(*) as total FROM users")->fetch_assoc()['total'];
-
-$pendingPayments = $mysqli->query("SELECT COUNT(*) as total FROM payments WHERE status='pending'")->fetch_assoc()['total'];
-
-$activeSubs = $mysqli->query("SELECT COUNT(*) as total FROM subscriptions WHERE status='active'")->fetch_assoc()['total'];
-
-$totalSeats = $mysqli->query("SELECT COUNT(*) as total FROM seats")->fetch_assoc()['total'];
-
+$totalUsers = $mysqli->query("SELECT COUNT(*) AS total FROM users")->fetch_assoc()['total'];
+$pendingPayments = $mysqli->query("SELECT COUNT(*) AS total FROM payments WHERE status='pending'")->fetch_assoc()['total'];
+$activeSubs = $mysqli->query("SELECT COUNT(*) AS total FROM subscriptions WHERE status='active'")->fetch_assoc()['total'];
+$totalSeats = $mysqli->query("SELECT COUNT(*) AS total FROM seats")->fetch_assoc()['total'];
 $todayEntries = $mysqli->query("
-SELECT COUNT(*) as total 
-FROM timings 
+SELECT COUNT(*) AS total
+FROM timings
 WHERE DATE(entry_time)=CURDATE()
 ")->fetch_assoc()['total'];
-
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Poppins;
+:root{
+--bg:#f3f6fb;
+--card:#ffffff;
+--text:#162033;
+--muted:#667085;
+--line:#dbe4f0;
+--primary:#2563eb;
+--primary-soft:#eff6ff;
+--warn:#b45309;
+--warn-soft:#fff7ed;
+--success:#166534;
+--success-soft:#f0fdf4;
 }
-
-body{
-display:flex;
-background:linear-gradient(135deg,#eef2ff,#e0e7ff);
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif;}
+body{background:var(--bg);color:var(--text);}
+.dashboard{
 min-height:100vh;
+display:grid;
+grid-template-columns:220px 1fr;
 }
-
-/* ===== Sidebar ===== */
-
 .sidebar{
-width:260px;
-background:linear-gradient(180deg,#1e3a8a,#2563eb);
-color:white;
-padding:30px 20px;
+background:#0f172a;
+padding:24px 16px;
 display:flex;
 flex-direction:column;
-justify-content:space-between;
-box-shadow:5px 0 25px rgba(0,0,0,0.1);
+gap:18px;
 }
-
-.sidebar h2{
-margin-bottom:40px;
+.brand{
+padding:0 10px 10px;
+border-bottom:1px solid rgba(255,255,255,0.1);
 }
-
-.nav-links a{
-display:block;
-color:white;
+.brand h1{
+font-size:20px;
+color:#fff;
+}
+.brand p{
+margin-top:4px;
+font-size:12px;
+color:#94a3b8;
+}
+.nav{
+display:grid;
+gap:8px;
+}
+.nav a{
 text-decoration:none;
-padding:12px 15px;
-border-radius:10px;
-margin-bottom:10px;
-transition:.3s;
+color:#cbd5e1;
+padding:11px 12px;
+border-radius:12px;
+transition:.2s ease;
 }
-
-.nav-links a:hover{
-background:rgba(255,255,255,0.2);
-transform:translateX(6px);
+.nav a:hover,
+.nav a.active{
+background:rgba(255,255,255,0.08);
+color:#fff;
 }
-
 .logout{
-background:#dc2626;
-text-align:center;
-margin-top:20px;
+margin-top:auto;
 }
-
-/* ===== Main ===== */
-
 .main{
-flex:1;
-padding:40px;
+padding:28px;
+display:grid;
+gap:18px;
 }
-
-.header{
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:16px;
+flex-wrap:wrap;
+}
+.topbar h2{
+font-size:28px;
+}
+.topbar p{
+margin-top:6px;
+color:var(--muted);
+}
+.status-box{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:16px;
+padding:16px 18px;
+min-width:220px;
+}
+.status-box span{
+display:block;
+font-size:13px;
+color:var(--muted);
+margin-bottom:6px;
+}
+.status-box strong{
+font-size:26px;
+color:var(--primary);
+}
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:14px;
+}
+.card{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:18px;
+padding:18px;
+}
+.card span{
+display:block;
+font-size:13px;
+color:var(--muted);
+margin-bottom:10px;
+}
+.card strong{
+display:block;
+font-size:30px;
+margin-bottom:12px;
+}
+.card a{
+display:inline-block;
+text-decoration:none;
+color:var(--primary);
+font-size:14px;
+font-weight:600;
+}
+.content{
+display:grid;
+grid-template-columns:1.1fr .9fr;
+gap:18px;
+}
+.panel{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:18px;
+padding:20px;
+}
+.panel h3{
+font-size:18px;
+margin-bottom:14px;
+}
+.quick-links{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:12px;
+}
+.quick-links a{
+display:block;
+padding:14px 16px;
+border-radius:14px;
+text-decoration:none;
+color:var(--text);
+background:#f8fafc;
+border:1px solid var(--line);
+font-weight:500;
+}
+.quick-links a small{
+display:block;
+margin-top:4px;
+color:var(--muted);
+font-weight:400;
+}
+.info-list{
+display:grid;
+gap:12px;
+}
+.info-item{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:30px;
+gap:12px;
+padding:14px 16px;
+border-radius:14px;
+background:#f8fafc;
+border:1px solid var(--line);
 }
-
-.header h1{
-font-size:28px;
-color:#1e293b;
+.info-item strong{
+font-size:20px;
 }
-
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-gap:25px;
-margin-bottom:35px;
+.info-item.warning{
+background:var(--warn-soft);
 }
-
-/* ===== Cards ===== */
-
-.card{
-background:white;
-padding:25px;
-border-radius:18px;
-box-shadow:0 15px 30px rgba(0,0,0,0.08);
-transition:.35s;
-position:relative;
-overflow:hidden;
+.info-item.warning strong{
+color:var(--warn);
 }
-
-.card:hover{
-transform:translateY(-6px);
-box-shadow:0 18px 40px rgba(0,0,0,0.12);
+.info-item.success{
+background:var(--success-soft);
 }
-
-.card h3{
-font-size:16px;
-color:#64748b;
-margin-bottom:8px;
+.info-item.success strong{
+color:var(--success);
 }
-
-.card p{
-font-size:32px;
-font-weight:600;
-color:#2563eb;
+@media(max-width:920px){
+.dashboard{
+grid-template-columns:1fr;
 }
-
-.manage-btn{
-display:inline-block;
-margin-top:10px;
-padding:8px 14px;
-background:linear-gradient(135deg,#2563eb,#4f46e5);
-color:white;
-border-radius:8px;
-font-size:13px;
-text-decoration:none;
+.content{
+grid-template-columns:1fr;
 }
-
-/* ===== Management Section ===== */
-
-.management{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-}
-
-.manage-card{
-background:white;
-padding:20px;
-border-radius:16px;
-box-shadow:0 12px 28px rgba(0,0,0,0.07);
-transition:.3s;
-}
-
-.manage-card:hover{
-transform:translateY(-5px);
-}
-
-.manage-card h4{
-margin-bottom:10px;
-}
-
-.manage-card a{
-display:inline-block;
-margin-top:8px;
-padding:8px 14px;
-background:#2563eb;
-color:white;
-border-radius:8px;
-font-size:13px;
-text-decoration:none;
-}
-
-@media(max-width:768px){
 .sidebar{
-display:none;
+padding-bottom:12px;
+}
+.logout{
+margin-top:0;
 }
 }
-
+@media(max-width:640px){
+.main{
+padding:18px;
+}
+.topbar h2{
+font-size:24px;
+}
+}
 </style>
 </head>
-
 <body>
+<div class="dashboard">
+    <aside class="sidebar">
+        <div class="brand">
+            <h1>Library Admin</h1>
+            <p>Simple control panel</p>
+        </div>
 
-<div class="sidebar">
+        <nav class="nav">
+            <a class="active" href="dashboard.php">Dashboard</a>
+            <a href="payments.php">Payments</a>
+            <a href="users.php">Users</a>
+            <a href="subscriptions.php">Subscriptions</a>
+            <a href="layout-builder.php">Seat Builder</a>
+            <a href="section-builder.php">Section Builder</a>
+        </nav>
 
-<div>
+        <div class="nav logout">
+            <a href="../logout.php">Logout</a>
+        </div>
+    </aside>
 
-<h2>Admin Panel</h2>
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h2>Admin Dashboard</h2>
+                <p>Jo kaam roz chahiye, woh yahin se directly open ho jayega.</p>
+            </div>
+            <div class="status-box">
+                <span>Pending payments</span>
+                <strong><?= $pendingPayments ?></strong>
+            </div>
+        </div>
 
-<div class="nav-links">
+        <section class="stats">
+            <div class="card">
+                <span>Total Users</span>
+                <strong><?= $totalUsers ?></strong>
+                <a href="users.php">Open users</a>
+            </div>
+            <div class="card">
+                <span>Active Subscriptions</span>
+                <strong><?= $activeSubs ?></strong>
+                <a href="subscriptions.php">Open subscriptions</a>
+            </div>
+            <div class="card">
+                <span>Total Seats</span>
+                <strong><?= $totalSeats ?></strong>
+                <a href="layout-builder.php">Open seat builder</a>
+            </div>
+            <div class="card">
+                <span>Today's Entries</span>
+                <strong><?= $todayEntries ?></strong>
+                <a href="subscriptions.php">View records</a>
+            </div>
+        </section>
 
-<a href="dashboard.php">Dashboard</a>
+        <section class="content">
+            <div class="panel">
+                <h3>Quick Actions</h3>
+                <div class="quick-links">
+                    <a href="payments.php">Review Payments<small>Approve or reject pending entries</small></a>
+                    <a href="users.php">Manage Users<small>Search users and account status</small></a>
+                    <a href="subscriptions.php">Check Plans<small>See active and expired subscriptions</small></a>
+                    <a href="layout-builder.php">Seat Layout<small>Update seats and arrangement</small></a>
+                    <a href="section-builder.php">Sections<small>Open section setup page</small></a>
+                </div>
+            </div>
 
-<a href="payments.php">Payments</a>
-
-<a href="users.php">Users</a>
-
-<a href="subscriptions.php">Subscriptions</a>
-
-<a href="layout-builder.php">Seat Builder</a>
-
-<a href="section-builder.php">Section Builder</a>
-
+            <div class="panel">
+                <h3>Today</h3>
+                <div class="info-list">
+                    <div class="info-item warning">
+                        <span>Pending approvals</span>
+                        <strong><?= $pendingPayments ?></strong>
+                    </div>
+                    <div class="info-item success">
+                        <span>Active plans</span>
+                        <strong><?= $activeSubs ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>Seat count</span>
+                        <strong><?= $totalSeats ?></strong>
+                    </div>
+                    <div class="info-item">
+                        <span>Entries today</span>
+                        <strong><?= $todayEntries ?></strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
-
-</div>
-
-<a href="../logout.php" class="nav-links logout">Logout</a>
-
-</div>
-
-
-<div class="main">
-
-<div class="header">
-<h1>Admin Dashboard</h1>
-</div>
-
-
-<div class="cards">
-
-<div class="card">
-<h3>Total Users</h3>
-<p><?= $totalUsers ?></p>
-</div>
-
-<div class="card">
-<h3>Pending Payments</h3>
-<p><?= $pendingPayments ?></p>
-<a href="payments.php" class="manage-btn">Review</a>
-</div>
-
-<div class="card">
-<h3>Active Subscriptions</h3>
-<p><?= $activeSubs ?></p>
-</div>
-
-<div class="card">
-<h3>Total Seats</h3>
-<p><?= $totalSeats ?></p>
-</div>
-
-<div class="card">
-<h3>Today's Entries</h3>
-<p><?= $todayEntries ?></p>
-</div>
-
-</div>
-
-
-<div class="management">
-
-<div class="manage-card">
-<h4>Seat Layout Builder</h4>
-<p>Create or modify seat layout</p>
-<a href="layout-builder.php">Open</a>
-</div>
-
-<div class="manage-card">
-<h4>Section Builder</h4>
-<p>Manage seat sections</p>
-<a href="section-builder.php">Open</a>
-</div>
-
-<div class="manage-card">
-<h4>Payments</h4>
-<p>Approve or reject payments</p>
-<a href="payments.php">Manage</a>
-</div>
-
-<div class="manage-card">
-<h4>User Management</h4>
-<p>View and control users</p>
-<a href="users.php">Manage</a>
-</div>
-
-</div>
-
-</div>
-
 </body>
 </html>

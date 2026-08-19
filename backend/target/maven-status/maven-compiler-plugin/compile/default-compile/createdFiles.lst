@@ -1,0 +1,14 @@
+com\librarysystem\dto\RegisterRequest.class
+com\librarysystem\entity\User.class
+com\librarysystem\config\CorsConfig.class
+com\librarysystem\controller\AuthController.class
+com\librarysystem\config\SecurityConfig.class
+com\librarysystem\controller\UserController.class
+com\librarysystem\controller\HealthController.class
+com\librarysystem\controller\ApiExceptionHandler.class
+com\librarysystem\controller\AdminController.class
+com\librarysystem\security\CurrentUser.class
+com\librarysystem\dto\LoginRequest.class
+com\librarysystem\service\LibraryService.class
+com\librarysystem\LibrarySystemApplication.class
+com\librarysystem\repository\UserRepository.class

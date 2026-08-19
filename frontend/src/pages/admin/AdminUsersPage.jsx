@@ -1,0 +1,3 @@
+import { useEffect, useState } from "react";
+import { apiClient } from "../../api/client";
+export function AdminUsersPage() { const [users,setUsers]=useState([]); useEffect(()=>{apiClient.get("/admin/users").then(({data})=>setUsers(data));},[]); return <section className="workspace"><header className="page-header"><div><p className="eyebrow">Members</p><h2>Users</h2></div></header><div className="table-panel"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active Plan</th><th>Joined</th></tr></thead><tbody>{users.map(user=><tr key={user.id}><td>{user.name}</td><td>{user.email}</td><td>{user.role}</td><td>{Number(user.active_subscription_count)>0?"Yes":"No"}</td><td>{user.created_at}</td></tr>)}</tbody></table></div></section>; }

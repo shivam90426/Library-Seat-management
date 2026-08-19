@@ -1,12 +1,17 @@
 <?php
-session_start();
+require_once "../../includes/security.php";
+library_system_bootstrap();
 require_once "../../config/db.php";
 
+header("Content-Type: application/json");
+
+require_api_login('user');
+
 $user_id = intval($_SESSION['user_id']);
-$date = $_GET['date'];
+$date = normalized_date_or_today($_GET['date'] ?? null);
 
 $stmt = $mysqli->prepare("
-SELECT ROUND(IFNULL(SUM(duration_minutes),0)/60,2) as hrs
+SELECT ROUND(IFNULL(SUM(GREATEST(duration_minutes, 0)),0)/60,2) as hrs
 FROM timings
 WHERE user_id=? AND DATE(entry_time)=?
 ");
