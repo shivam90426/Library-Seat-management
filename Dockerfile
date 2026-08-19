@@ -6,4 +6,4 @@ WORKDIR /app
 
 COPY . /app
 
-RUN php -i | grep -i mysqli || true
+RUN php -m | grep -E "mysqli|pdo_mysql"
