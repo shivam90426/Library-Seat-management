@@ -8,6 +8,84 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 $search = trim($_GET['q'] ?? '');
+
+$message = "";
+$messageType = "success";
+$planOptions = [
+    '6h_monthly' => ['label'=>'6 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'6h','price'=>450.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    '12h_monthly' => ['label'=>'12 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'12h','price'=>800.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    '24h_monthly' => ['label'=>'24 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'24h','price'=>1000.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    'premium_3m' => ['label'=>'3 Month Premium (6 Hour)','plan_name'=>'3 Month Premium','seat_type'=>'6h','price'=>2500.00,'duration_months'=>3,'bonus_days'=>7,'renewal_type'=>'bulk_3month']
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $targetUserId = intval($_POST['user_id'] ?? 0);
+
+    if ($targetUserId > 0 && $targetUserId === intval($_SESSION['user_id'])) {
+        $message = "You cannot modify your own admin account from here.";
+        $messageType = "error";
+    } elseif ($targetUserId > 0 && $action === 'delete_user') {
+        $check = $mysqli->prepare("SELECT id, role FROM users WHERE id=? LIMIT 1");
+        $check->bind_param("i", $targetUserId);
+        $check->execute();
+        $target = $check->get_result()->fetch_assoc();
+
+        if (!$target) {
+            $message = "User not found.";
+            $messageType = "error";
+        } elseif ($target['role'] === 'admin') {
+            $message = "Admin accounts cannot be deleted from this page.";
+            $messageType = "error";
+        } else {
+            $delete = $mysqli->prepare("DELETE FROM users WHERE id=? AND role='user'");
+            $delete->bind_param("i", $targetUserId);
+            $delete->execute();
+            $message = $delete->affected_rows > 0 ? "User deleted successfully." : "Unable to delete user.";
+            $messageType = $delete->affected_rows > 0 ? "success" : "error";
+        }
+    } elseif ($targetUserId > 0 && $action === 'change_plan') {
+        $planKey = $_POST['plan_key'] ?? '';
+        if (!isset($planOptions[$planKey])) {
+            $message = "Invalid plan selected.";
+            $messageType = "error";
+        } else {
+            $plan = $planOptions[$planKey];
+            $startDate = date("Y-m-d");
+            $endDate = date("Y-m-d", strtotime($startDate . " +" . $plan['duration_months'] . " month +" . $plan['bonus_days'] . " day"));
+
+            $stmt = $mysqli->prepare("
+                SELECT id FROM subscriptions
+                WHERE user_id=? AND status='active'
+                ORDER BY id DESC LIMIT 1
+            ");
+            $stmt->bind_param("i", $targetUserId);
+            $stmt->execute();
+            $sub = $stmt->get_result()->fetch_assoc();
+
+            if (!$sub) {
+                $message = "This user has no active subscription to change.";
+                $messageType = "error";
+            } else {
+                $update = $mysqli->prepare("
+                    UPDATE subscriptions
+                    SET plan_name=?, seat_type=?, price=?, duration_months=?, bonus_days=?,
+                        renewal_type=?, start_date=?, end_date=?, status='active'
+                    WHERE id=?
+                ");
+                $update->bind_param(
+                    "ssdiiisssi",
+                    $plan['plan_name'], $plan['seat_type'], $plan['price'],
+                    $plan['duration_months'], $plan['bonus_days'], $plan['renewal_type'],
+                    $startDate, $endDate, $sub['id']
+                );
+                $update->execute();
+                $message = $update->affected_rows >= 0 ? "User plan changed to {$plan['label']}." : "Unable to change plan.";
+            }
+        }
+    }
+}
+
 $where = "";
 if ($search !== '') {
     $safeSearch = "%" . $mysqli->real_escape_string($search) . "%";
@@ -37,7 +115,13 @@ SELECT
         SELECT COUNT(*)
         FROM subscriptions s
         WHERE s.user_id = u.id AND s.status='active' AND s.end_date >= CURDATE()
-    ) AS active_subscription_count
+    ) AS active_subscription_count,
+    (
+        SELECT CONCAT(s.seat_type, ' | ', s.plan_name)
+        FROM subscriptions s
+        WHERE s.user_id = u.id AND s.status='active' AND s.end_date >= CURDATE()
+        ORDER BY s.id DESC LIMIT 1
+    ) AS active_plan
 FROM users u
 $where
 ORDER BY u.created_at DESC
@@ -80,6 +164,17 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
 .chip.inactive{background:rgba(220,38,38,0.18);color:#fca5a5;}
 .muted{color:#cbd5e1;font-size:13px;}
 @media(max-width:900px){.filters{grid-template-columns:1fr;}}
+
+.message{padding:13px 16px;border-radius:15px;margin-bottom:16px;}
+.message.success{background:rgba(34,197,94,.12);border:1px solid rgba(74,222,128,.25);color:#86efac;}
+.message.error{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.25);color:#fca5a5;}
+.user-actions{display:grid;gap:8px;min-width:190px;}
+.plan-form{display:grid;grid-template-columns:1fr;gap:6px;}
+.user-actions select{padding:8px 9px;border-radius:10px;border:1px solid rgba(165,205,245,.18);background:rgba(3,15,28,.62);color:#fff;}
+.small-btn{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;color:#fff;cursor:pointer;font-weight:600;}
+.plan-btn{background:linear-gradient(135deg,#4f46e5,#7c3aed);}
+.delete-btn{background:rgba(220,38,38,.72);}
+
 </style>
 </head>
 <body>
@@ -102,6 +197,7 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
     </div>
 
     <div class="panel">
+        <?php if ($message !== ""): ?><div class="message <?= $messageType === "error" ? "error" : "success" ?>"><?= htmlspecialchars($message) ?></div><?php endif; ?>
         <form method="GET" class="filters">
             <div class="field">
                 <label>Search by name, email, or role</label>
@@ -121,6 +217,7 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
                     <th>Active Plan</th>
                     <th>Created</th>
                     <th>Last Login</th>
+                    <th>Actions</th>
                 </tr>
                 <?php while ($u = $users->fetch_assoc()): ?>
                     <tr>
@@ -132,6 +229,31 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
                         <td><?= intval($u['active_subscription_count']) > 0 ? 'Yes' : 'No' ?></td>
                         <td><?= htmlspecialchars($u['created_at']) ?></td>
                         <td><span class="muted"><?= htmlspecialchars($u['last_login'] ?: 'Never') ?></span></td>
+                        <td>
+                            <?php if ($u['role'] === 'user'): ?>
+                                <div class="user-actions">
+                                    <?php if (intval($u['active_subscription_count']) > 0): ?>
+                                    <form method="POST" class="plan-form">
+                                        <input type="hidden" name="action" value="change_plan">
+                                        <input type="hidden" name="user_id" value="<?= intval($u['id']) ?>">
+                                        <select name="plan_key">
+                                            <?php foreach ($planOptions as $key => $plan): ?>
+                                                <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($plan['label']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button type="submit" class="small-btn plan-btn">Change Plan</button>
+                                    </form>
+                                    <?php endif; ?>
+                                    <form method="POST" onsubmit="return confirm('Delete this user and their related records? This cannot be undone.');">
+                                        <input type="hidden" name="action" value="delete_user">
+                                        <input type="hidden" name="user_id" value="<?= intval($u['id']) ?>">
+                                        <button type="submit" class="small-btn delete-btn">Delete User</button>
+                                    </form>
+                                </div>
+                            <?php else: ?>
+                                <span class="muted">Admin</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </table>

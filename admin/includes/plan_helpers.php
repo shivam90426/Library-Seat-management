@@ -7,7 +7,7 @@ function get_subscription_plan_options(): array
             'label' => '6 Hour Plan',
             'plan_name' => '1 Month Plan',
             'seat_type' => '6h',
-            'price' => 999.00,
+            'price' => 450.00,
             'duration_months' => 1,
             'bonus_days' => 0,
             'renewal_type' => 'normal'
@@ -31,7 +31,7 @@ function get_subscription_plan_options(): array
             'renewal_type' => 'normal'
         ],
         'premium_3m' => [
-            'label' => '3 Month Premium',
+            'label' => '3 Month Premium (6 Hour)',
             'plan_name' => '3 Month Premium',
             'seat_type' => '6h',
             'price' => 2500.00,
@@ -44,14 +44,11 @@ function get_subscription_plan_options(): array
 
 function get_default_plan_key_for_amount(float $amount): string
 {
-    if (abs($amount - 2500.00) < 0.01) {
-        return 'premium_3m';
-    }
-    if (abs($amount - 800.00) < 0.01) {
-        return '12h_monthly';
-    }
-    if (abs($amount - 1000.00) < 0.01) {
-        return '24h_monthly';
+    $plans = get_subscription_plan_options();
+    foreach ($plans as $key => $plan) {
+        if (abs($amount - (float)$plan['price']) < 0.01) {
+            return $key;
+        }
     }
     return '6h_monthly';
 }

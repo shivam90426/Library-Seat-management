@@ -34,10 +34,10 @@ body{
 min-height:100vh;
 background:linear-gradient(135deg,#0f172a,#1e293b);
 color:#fff;
-padding:32px 20px;
+padding:14px 18px;
 }
 .page{
-max-width:1200px;
+max-width:1450px;
 margin:0 auto;
 }
 .topbar{
@@ -45,7 +45,7 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 gap:16px;
-margin-bottom:24px;
+margin-bottom:12px;
 }
 .back-link,.action-link{
 text-decoration:none;
@@ -59,18 +59,18 @@ border:1px solid rgba(255,255,255,0.12);
 background:rgba(255,255,255,0.06);
 border:1px solid rgba(255,255,255,0.1);
 border-radius:24px;
-padding:28px;
-margin-bottom:24px;
+padding:18px 22px;
+margin-bottom:14px;
 box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
 .hero h1{
-font-size:32px;
+font-size:28px;
 margin-bottom:0;
 }
 .status{
-margin-top:16px;
+margin-top:10px;
 display:inline-flex;
-padding:10px 16px;
+padding:7px 12px;
 border-radius:999px;
 background:rgba(37,99,235,0.18);
 border:1px solid rgba(96,165,250,0.4);
@@ -81,28 +81,47 @@ border-color:rgba(248,113,113,0.45);
 }
 .layout{
 display:grid;
-grid-template-columns:1.25fr 320px;
-gap:24px;
+grid-template-columns:minmax(0,1fr) 250px;
+gap:16px;
 }
 .panel{
 background:rgba(255,255,255,0.06);
 border:1px solid rgba(255,255,255,0.1);
 border-radius:24px;
-padding:24px;
+padding:16px;
 box-shadow:0 20px 40px rgba(0,0,0,0.18);
 }
 .section-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-gap:18px;
+position:relative;
+min-width:0;
+min-height:0;
+transform-origin:top left;
 }
+.section-board-wrap{
+position:relative;
+overflow:hidden;
+width:100%;
+height:clamp(500px, calc(100vh - 315px), 660px);
+padding:4px;
+border-radius:18px;
+}
+.section-card{
+position:absolute;
+padding:10px;
+border-radius:16px;
+background:linear-gradient(180deg,rgba(30,41,59,.94),rgba(15,23,42,.90));
+border:1px solid rgba(255,255,255,.10);
+box-shadow:0 18px 36px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.04);
+overflow:hidden;
+}
+.section-card h3{margin-bottom:10px;font-size:15px;}
 .section-card h3{
-margin-bottom:14px;
+margin-bottom:9px;
 }
 .seat-grid{
 display:grid;
-grid-template-columns:repeat(auto-fill, minmax(34px, 34px));
-gap:10px;
+grid-template-columns:repeat(auto-fill, minmax(30px, 30px));
+gap:6px;
 }
 .seat{
 width:34px;
@@ -113,7 +132,7 @@ align-items:center;
 justify-content:center;
 background:rgba(255,255,255,0.04);
 transition:transform .2s ease, box-shadow .2s ease;
-cursor:pointer;
+cursor:default;
 }
 .seat:hover{
 transform:translateY(-2px);
@@ -144,6 +163,33 @@ color:#cbd5e1;
 .legend-item img{
 width:24px;
 }
+.shift-modal{
+position:fixed;
+inset:0;
+display:none;
+align-items:center;
+justify-content:center;
+background:rgba(2,6,23,.78);
+padding:20px;
+z-index:1000;
+}
+.shift-card{
+width:min(520px,100%);
+background:#0f172a;
+border:1px solid rgba(255,255,255,.12);
+border-radius:24px;
+padding:24px;
+box-shadow:0 25px 60px rgba(0,0,0,.35);
+}
+.shift-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;}
+.shift-option{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;border-radius:18px;padding:18px;text-align:left;cursor:pointer;transition:.2s;}
+.shift-option:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(96,165,250,.6);}
+.shift-option:disabled{opacity:.45;cursor:not-allowed;}
+.shift-option strong{display:block;font-size:16px;margin-bottom:5px;}
+.shift-option span{display:block;color:#cbd5e1;font-size:13px;}
+.shift-option .shift-state{margin-top:10px;font-size:12px;color:#86efac;}
+.shift-option:disabled .shift-state{color:#fca5a5;}
+.shift-close{margin-top:16px;width:100%;padding:11px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;cursor:pointer;}
 .note{
 margin-top:20px;
 padding:16px;
@@ -153,10 +199,234 @@ color:#cbd5e1;
 line-height:1.6;
 }
 @media(max-width: 920px){
-.layout{
-grid-template-columns:1fr;
+.layout{grid-template-columns:1fr;}
+.section-board-wrap{height:620px;overflow:auto;}
+.section-grid{transform-origin:top left;}
 }
+
+/* =========================================================
+   GLASS UI — linked user pages
+   Visual-only overrides: existing PHP/JS functionality kept.
+   ========================================================= */
+:root{
+  --g-bg:#06111f;
+  --g-bg2:#0a1b2d;
+  --g-card:rgba(13,31,50,.68);
+  --g-card2:rgba(18,42,66,.56);
+  --g-border:rgba(165,205,245,.20);
+  --g-border-hi:rgba(130,170,255,.34);
+  --g-text:#f7fbff;
+  --g-muted:#b9c9dc;
+  --g-purple:#8b5cf6;
+  --g-blue:#3b82f6;
+  --g-green:#22c55e;
+  --g-red:#ef4444;
+  --g-orange:#f59e0b;
 }
+html{background:var(--g-bg)!important;}
+body{
+  background:
+    radial-gradient(circle at 8% 0%,rgba(56,189,248,.14),transparent 28%),
+    radial-gradient(circle at 92% 4%,rgba(139,92,246,.14),transparent 28%),
+    linear-gradient(135deg,var(--g-bg),var(--g-bg2))!important;
+  color:var(--g-text)!important;
+  min-height:100vh;
+}
+.page{position:relative;}
+a{color:var(--g-text);}
+.back-link,.back,.logout,.back-btn,.action-link{
+  background:rgba(255,255,255,.07)!important;
+  border:1px solid var(--g-border)!important;
+  color:var(--g-text)!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.08)!important;
+  backdrop-filter:blur(14px);
+}
+.back-link:hover,.back:hover,.logout:hover,.back-btn:hover,.action-link:hover{
+  border-color:var(--g-border-hi)!important;
+  background:rgba(255,255,255,.11)!important;
+}
+.card,.panel,.hero,.chart-card,.empty{
+  background:linear-gradient(135deg,rgba(15,36,58,.76),rgba(7,22,38,.64))!important;
+  border:1px solid var(--g-border)!important;
+  box-shadow:0 22px 55px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.055)!important;
+  backdrop-filter:blur(18px)!important;
+}
+h1,h2,h3,h4,strong{color:var(--g-text);}
+p,.meta,.help,#statusText,.features,.note,.legend-item,.detail span,.card span{color:var(--g-muted)!important;}
+.status{
+  background:rgba(59,130,246,.13)!important;
+  border-color:rgba(96,165,250,.35)!important;
+}
+.status.expired{
+  background:rgba(239,68,68,.13)!important;
+  border-color:rgba(248,113,113,.38)!important;
+}
+input,textarea,select{
+  background:rgba(3,15,28,.62)!important;
+  color:var(--g-text)!important;
+  border:1px solid var(--g-border)!important;
+}
+input::placeholder,textarea::placeholder{color:#7f94ab!important;}
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(139,92,246,.65)!important;
+  box-shadow:0 0 0 3px rgba(139,92,246,.13)!important;
+}
+button,.button,.primary-link{
+  background:linear-gradient(135deg,#4f46e5,#7c3aed)!important;
+  color:#fff!important;
+  border:1px solid rgba(167,139,250,.34)!important;
+  box-shadow:0 10px 24px rgba(79,70,229,.22)!important;
+}
+button:hover,.button:hover,.primary-link:hover{filter:brightness(1.08);}
+.seat{
+  background:rgba(255,255,255,.045)!important;
+  border:1px solid rgba(255,255,255,.08);
+}
+.seat:hover{
+  box-shadow:0 10px 24px rgba(59,130,246,.25)!important;
+}
+.note{
+  background:rgba(3,15,28,.48)!important;
+  border:1px solid rgba(255,255,255,.08);
+}
+.shift-modal{background:rgba(1,8,18,.78)!important;backdrop-filter:blur(7px);}
+.shift-card,.shift-option{
+  background:rgba(10,29,48,.88)!important;
+  border-color:var(--g-border)!important;
+  color:var(--g-text)!important;
+  backdrop-filter:blur(18px);
+}
+.shift-option span{color:var(--g-muted)!important;}
+.shift-close{
+  background:rgba(255,255,255,.06)!important;
+  border-color:var(--g-border)!important;
+  color:var(--g-text)!important;
+}
+
+/* My Seat */
+.seat-banner{
+  background:linear-gradient(135deg,rgba(59,130,246,.24),rgba(99,102,241,.16))!important;
+  border:1px solid rgba(96,165,250,.25);
+  box-shadow:inset 0 1px rgba(255,255,255,.08);
+}
+.detail{
+  background:rgba(255,255,255,.045)!important;
+  border-color:var(--g-border)!important;
+}
+
+/* Subscription */
+.grid{gap:20px!important;}
+.card .price,.price,.plan{color:#a78bfa!important;}
+.warning{
+  background:rgba(239,68,68,.12)!important;
+  border:1px solid rgba(248,113,113,.28)!important;
+  color:#fca5a5!important;
+}
+
+/* Profile */
+.avatar{
+  border:1px solid rgba(139,92,246,.55)!important;
+  box-shadow:0 12px 35px rgba(79,70,229,.25)!important;
+}
+.header{border-bottom-color:var(--g-border)!important;}
+.message.success{
+  background:rgba(34,197,94,.11)!important;
+  border-color:rgba(34,197,94,.28)!important;
+  color:#86efac!important;
+}
+.message.error{
+  background:rgba(239,68,68,.11)!important;
+  border-color:rgba(239,68,68,.28)!important;
+  color:#fca5a5!important;
+}
+.note{color:var(--g-muted)!important;}
+
+/* Payment */
+.qr-box img{
+  border:1px solid var(--g-border)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.25)!important;
+}
+.upi-box{
+  background:rgba(255,255,255,.055)!important;
+  border:1px solid var(--g-border)!important;
+}
+.success{
+  background:rgba(34,197,94,.11)!important;
+  border:1px solid rgba(34,197,94,.25)!important;
+  color:#86efac!important;
+}
+
+/* Tables / history */
+table{
+  background:rgba(11,29,47,.72)!important;
+  color:var(--g-text)!important;
+  border:1px solid var(--g-border)!important;
+  box-shadow:0 22px 50px rgba(0,0,0,.25)!important;
+}
+th{
+  background:linear-gradient(135deg,#3730a3,#4f46e5)!important;
+}
+tr:nth-child(even){background:rgba(255,255,255,.035)!important;}
+tr:hover{background:rgba(255,255,255,.06)!important;}
+td{border-bottom:1px solid rgba(255,255,255,.06);}
+.status-approved{color:#4ade80!important;}
+.status-pending{color:#fbbf24!important;}
+.status-rejected{color:#f87171!important;}
+
+/* Analytics */
+.stats .card strong{color:var(--g-text)!important;}
+canvas{filter:drop-shadow(0 8px 18px rgba(59,130,246,.08));}
+
+/* 100% browser-zoom desktop layout: keep the complete seat map visible */
+@media (min-width: 921px){
+  .topbar{margin-bottom:10px;}
+  .back-link,.action-link{padding:7px 14px;font-size:12px;}
+  .hero{padding:14px 18px;margin-bottom:10px;border-radius:18px;}
+  .hero h1{font-size:24px;}
+  .status{margin-top:7px;padding:5px 10px;font-size:11px;}
+  .layout{gap:14px;}
+  .panel{padding:12px;border-radius:18px;}
+  .legend{gap:9px;}
+  .legend-item{gap:9px;font-size:12px;}
+  .legend-item img{width:21px;}
+  .note{margin-top:12px;padding:12px;font-size:11px;line-height:1.45;}
+}
+
+/* Small screens */
+@media(max-width:700px){
+  body{padding:20px 12px!important;}
+  .card,.panel,.hero{border-radius:20px!important;}
+}
+
+
+/* Original seat-image presentation: no artificial tile styling. */
+.seat{
+    width:30px!important;
+    height:30px!important;
+    padding:1px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    transform:none!important;
+}
+.seat:hover{
+    transform:none!important;
+    background:transparent!important;
+    box-shadow:0 0 12px rgba(59,130,246,.18)!important;
+}
+.seat img{
+    width:28px!important;
+    height:28px!important;
+    object-fit:contain!important;
+    display:block!important;
+    pointer-events:none!important;
+}
+.seat.disabled{
+    opacity:1!important;
+    cursor:not-allowed!important;
+}
+.seat.disabled img{filter:none!important;}
+
 </style>
 </head>
 <body>
@@ -177,7 +447,9 @@ grid-template-columns:1fr;
 
     <div class="layout">
         <div class="panel">
-            <div class="section-grid" id="seatSections"></div>
+            <div class="section-board-wrap">
+                <div class="section-grid" id="seatSections"></div>
+            </div>
         </div>
 
         <div class="panel">
@@ -195,6 +467,26 @@ grid-template-columns:1fr;
     </div>
 </div>
 
+<div class="shift-modal" id="shiftModal">
+    <div class="shift-card">
+        <h2>Choose Your Shift</h2>
+        <p id="shiftSeatLabel" style="margin-top:6px;color:#cbd5e1;"></p>
+        <div class="shift-options">
+            <button type="button" class="shift-option" id="morningShiftBtn">
+                <strong>🌅 Morning</strong>
+                <span>6:00 AM – 12:00 PM</span>
+                <span class="shift-state" id="morningShiftState">Available</span>
+            </button>
+            <button type="button" class="shift-option" id="eveningShiftBtn">
+                <strong>🌆 Evening</strong>
+                <span>12:00 PM – 6:00 PM</span>
+                <span class="shift-state" id="eveningShiftState">Available</span>
+            </button>
+        </div>
+        <button type="button" class="shift-close" onclick="closeShiftModal()">Cancel</button>
+    </div>
+</div>
+
 <script>
 const csrfToken = "<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>";
 const bookingAllowed = <?= $bookingAllowed ? 'true' : 'false' ?>;
@@ -203,43 +495,95 @@ const seatSections = document.getElementById("seatSections");
 function seatImageFor(status) {
     if (status === "mine") return "../assets/seats/blue.png";
     if (status === "booked") return "../assets/seats/red.png";
-    if (status === "blocked") return "../assets/seats/gray.svg";
+    if (status === "blocked" || status === "unavailable_plan") return "../assets/seats/gray.svg";
     return "../assets/seats/green.png";
 }
+
+let selectedSeat = null;
+
+const shiftModal = document.getElementById("shiftModal");
+const shiftSeatLabel = document.getElementById("shiftSeatLabel");
+const morningShiftBtn = document.getElementById("morningShiftBtn");
+const eveningShiftBtn = document.getElementById("eveningShiftBtn");
+const morningShiftState = document.getElementById("morningShiftState");
+const eveningShiftState = document.getElementById("eveningShiftState");
+
+function closeShiftModal() {
+    shiftModal.style.display = "none";
+    selectedSeat = null;
+}
+
+function openShiftSelector(seat) {
+    selectedSeat = seat;
+    shiftSeatLabel.textContent = seat.seat_no + " • 6H plan";
+
+    const morningAvailable = seat.morning === "available";
+    const eveningAvailable = seat.evening === "available";
+
+    morningShiftBtn.disabled = !morningAvailable;
+    eveningShiftBtn.disabled = !eveningAvailable;
+    morningShiftState.textContent = morningAvailable ? "Available" : "Already booked";
+    eveningShiftState.textContent = eveningAvailable ? "Available" : "Already booked";
+
+    shiftModal.style.display = "flex";
+}
+
+morningShiftBtn.onclick = function () {
+    if (selectedSeat) bookSeat(selectedSeat.id, "morning");
+};
+
+eveningShiftBtn.onclick = function () {
+    if (selectedSeat) bookSeat(selectedSeat.id, "evening");
+};
 
 function loadSeatMap() {
     fetch("api/get-seats-map.php")
         .then(res => res.json())
-        .then(data => {
+        .then(payload => {
+            const sections = Array.isArray(payload) ? [] : (payload.sections || []);
+            const seats = Array.isArray(payload) ? payload : (payload.seats || []);
             const grouped = {};
             seatSections.innerHTML = "";
 
-            data.forEach(seat => {
-                const section = seat.section || "General";
-                if (!grouped[section]) {
-                    grouped[section] = [];
-                }
-                grouped[section].push(seat);
+            seats.forEach(seat => {
+                const code = seat.section || "General";
+                if (!grouped[code]) grouped[code] = [];
+                grouped[code].push(seat);
             });
 
-            Object.keys(grouped).forEach(sectionName => {
+            const list = sections.length ? sections : Object.keys(grouped).map((code, i) => ({
+                section_code: code, name: code, pos_x: 20 + (i % 2) * 430, pos_y: 20 + Math.floor(i / 2) * 360, width: 9, height: 4, seats: grouped[code] || []
+            }));
+
+            let maxRight = 760, maxBottom = 760;
+            list.forEach(section => {
+                const x = Number(section.pos_x || 0);
+                const y = Number(section.pos_y || 0);
+                const w = Math.max(74, 26 + Number(section.width || 4) * 40);
+                const h = Math.max(170, Number(section.height || 2) * 84);
+                maxRight = Math.max(maxRight, x + w + 30);
+                maxBottom = Math.max(maxBottom, y + h + 30);
+
                 const wrapper = document.createElement("div");
                 wrapper.className = "section-card";
+                wrapper.style.left = x + "px";
+                wrapper.style.top = y + "px";
+                wrapper.style.width = w + "px";
+                wrapper.style.minHeight = h + "px";
 
                 const title = document.createElement("h3");
-                title.textContent = sectionName.replace(/_/g, " ").replace(/\b\w/g, char => char.toUpperCase());
+                title.textContent = section.name || section.section_code || "Section";
                 wrapper.appendChild(title);
 
                 const grid = document.createElement("div");
                 grid.className = "seat-grid";
 
-                grouped[sectionName].forEach(seat => {
+                const sectionSeats = grouped[section.section_code] || [];
+                sectionSeats.forEach(seat => {
                     const seatNode = document.createElement("div");
                     seatNode.className = "seat";
-
-                    if (seat.status === "booked" || seat.status === "blocked") {
-                        seatNode.classList.add("disabled");
-                    }
+                    const disabled = ["booked", "blocked", "unavailable_plan", "mine"].includes(seat.status);
+                    if (disabled) seatNode.classList.add("disabled");
 
                     const image = document.createElement("img");
                     image.src = seatImageFor(seat.status);
@@ -249,29 +593,47 @@ function loadSeatMap() {
 
                     if (bookingAllowed && seat.status === "available") {
                         seatNode.onclick = function () {
-                            bookSeat(seat.id);
+                            if (seat.seat_type === "6h") openShiftSelector(seat);
+                            else bookSeat(seat.id, null);
                         };
-                    } else if (seat.status !== "mine") {
-                        seatNode.classList.add("disabled");
                     }
-
                     grid.appendChild(seatNode);
                 });
 
                 wrapper.appendChild(grid);
                 seatSections.appendChild(wrapper);
             });
-        });
+
+            // Keep the saved admin positions/sizes intact, but scale the whole
+            // board uniformly so it fits the user page at normal (100%) zoom.
+            const boardW = Math.max(760, maxRight);
+            const boardH = Math.max(560, maxBottom);
+            seatSections.style.width = boardW + "px";
+            seatSections.style.height = boardH + "px";
+            seatSections.style.transform = "scale(1)";
+
+            requestAnimationFrame(() => {
+                const viewport = seatSections.parentElement;
+                const availableW = Math.max(100, viewport.clientWidth - 8);
+                const availableH = Math.max(100, viewport.clientHeight - 8);
+                const scale = Math.min(1, availableW / boardW, availableH / boardH);
+                seatSections.style.transform = "scale(" + scale + ")";
+            });
+        })
+        .catch(() => alert("Unable to load seats right now."));
 }
 
-function bookSeat(seatId) {
+function bookSeat(seatId, shift = null) {
+    const body = "seat_id=" + encodeURIComponent(seatId) +
+        (shift ? "&shift=" + encodeURIComponent(shift) : "");
+
     fetch("api/book-seat.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRF-Token": csrfToken
         },
-        body: "seat_id=" + encodeURIComponent(seatId)
+        body: body
     })
     .then(res => res.text())
     .then(response => {
@@ -279,22 +641,36 @@ function bookSeat(seatId) {
             alert("Your subscription has expired.");
             return;
         }
-        if (response === "already") {
-            alert("You already have an active seat booking.");
+        if (response === "wrong_category") {
+            alert("You can book only seats from your subscription category.");
             return;
         }
-        if (response === "taken") {
-            alert("That seat was booked by someone else.");
+        if (response === "shift_required") {
+            alert("Please select a shift for a 6H seat.");
+            return;
+        }
+        if (response === "already") {
+            alert("You already have an active seat booking.");
+            closeShiftModal();
+            loadSeatMap();
+            return;
+        }
+        if (response === "shift_taken" || response === "taken") {
+            alert(response === "shift_taken" ? "That shift was booked by someone else." : "That seat is already booked.");
+            closeShiftModal();
+            loadSeatMap();
             return;
         }
         if (response === "booked") {
             alert("Seat booked successfully.");
+            closeShiftModal();
             loadSeatMap();
             return;
         }
 
         alert("Unable to book this seat right now.");
-    });
+    })
+    .catch(() => alert("Unable to book this seat right now."));
 }
 
 loadSeatMap();

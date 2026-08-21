@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Blocked seat">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="10" width="36" height="20" rx="8" fill="url(#g)"/>
+  <rect x="10" y="28" width="44" height="12" rx="6" fill="#475569"/>
+  <rect x="16" y="40" width="8" height="14" rx="3" fill="#475569"/>
+  <rect x="40" y="40" width="8" height="14" rx="3" fill="#475569"/>
+</svg>

@@ -9,6 +9,30 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 $status = $_GET['status'] ?? 'all';
 $search = trim($_GET['q'] ?? '');
+$planOptions = [
+    '6h_monthly' => ['label'=>'6 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'6h','price'=>450.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    '12h_monthly' => ['label'=>'12 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'12h','price'=>800.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    '24h_monthly' => ['label'=>'24 Hour Plan','plan_name'=>'1 Month Plan','seat_type'=>'24h','price'=>1000.00,'duration_months'=>1,'bonus_days'=>0,'renewal_type'=>'normal'],
+    'premium_3m' => ['label'=>'3 Month Premium (6 Hour)','plan_name'=>'3 Month Premium','seat_type'=>'6h','price'=>2500.00,'duration_months'=>3,'bonus_days'=>7,'renewal_type'=>'bulk_3month']
+];
+$message = ""; $messageType = "success";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_plan') {
+    $userId = intval($_POST['user_id'] ?? 0);
+    $subId = intval($_POST['subscription_id'] ?? 0);
+    $planKey = $_POST['plan_key'] ?? '';
+    if ($userId <= 0 || $subId <= 0 || !isset($planOptions[$planKey])) {
+        $message = "Invalid plan change request."; $messageType = "error";
+    } else {
+        $plan = $planOptions[$planKey];
+        $startDate = date("Y-m-d");
+        $endDate = date("Y-m-d", strtotime($startDate . " +" . $plan['duration_months'] . " month +" . $plan['bonus_days'] . " day"));
+        $stmt = $mysqli->prepare("UPDATE subscriptions SET plan_name=?, seat_type=?, price=?, duration_months=?, bonus_days=?, renewal_type=?, start_date=?, end_date=?, status='active' WHERE id=? AND user_id=?");
+        $stmt->bind_param("ssdiiissii",$plan['plan_name'],$plan['seat_type'],$plan['price'],$plan['duration_months'],$plan['bonus_days'],$plan['renewal_type'],$startDate,$endDate,$subId,$userId);
+        $stmt->execute();
+        $message = "Plan updated successfully."; 
+    }
+}
 
 $where = [];
 if (in_array($status, ['active', 'expired', 'cancelled', 'queued'], true)) {
@@ -76,6 +100,7 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
 .chip.queued{background:rgba(59,130,246,0.18);color:#93c5fd;}
 .muted{color:#cbd5e1;font-size:13px;}
 @media(max-width:900px){.filters{grid-template-columns:1fr;}}
+.message{padding:13px 16px;border-radius:15px;margin-bottom:16px}.message.success{background:rgba(34,197,94,.12);border:1px solid rgba(74,222,128,.25);color:#86efac}.message.error{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.25);color:#fca5a5}.manage-plan-form{display:grid;gap:6px;min-width:180px}.manage-plan-form select{padding:8px 9px;border-radius:10px;border:1px solid rgba(165,205,245,.18);background:rgba(3,15,28,.62);color:#fff}.manage-plan-form button{border:0;border-radius:10px;padding:8px 10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;cursor:pointer;font-weight:600}
 </style>
 </head>
 <body>
@@ -98,6 +123,7 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
     </div>
 
     <div class="panel">
+        <?php if ($message !== ""): ?><div class="message <?= $messageType === "error" ? "error" : "success" ?>"><?= htmlspecialchars($message) ?></div><?php endif; ?>
         <form method="GET" class="filters">
             <div class="field">
                 <label>Search by user, plan, or seat type</label>
@@ -127,7 +153,7 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
                     <th>Bonus Days</th>
                     <th>Status</th>
                     <th>Start</th>
-                    <th>End</th>
+                    <th>End</th><th>Manage Plan</th>
                 </tr>
                 <?php while ($s = $subs->fetch_assoc()): ?>
                     <tr>
@@ -143,6 +169,21 @@ td{border-bottom:1px solid rgba(255,255,255,0.06);}
                         <td><span class="chip <?= htmlspecialchars($s['status']) ?>"><?= htmlspecialchars($s['status']) ?></span></td>
                         <td><?= htmlspecialchars($s['start_date']) ?></td>
                         <td><?= htmlspecialchars($s['end_date']) ?></td>
+                    <td>
+                            <?php if ($s['status'] === 'active'): ?>
+                            <form method="POST" class="manage-plan-form">
+                                <input type="hidden" name="action" value="change_plan">
+                                <input type="hidden" name="user_id" value="<?= intval($s['user_id']) ?>">
+                                <input type="hidden" name="subscription_id" value="<?= intval($s['id']) ?>">
+                                <select name="plan_key">
+                                    <?php foreach ($planOptions as $key => $plan): ?>
+                                        <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($plan['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="submit">Change</button>
+                            </form>
+                            <?php else: ?><span class="muted">—</span><?php endif; ?>
+                        </td>
                     </tr>
                 <?php endwhile; ?>
             </table>
